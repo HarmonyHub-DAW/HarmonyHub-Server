@@ -1,44 +1,22 @@
-
-import express, { Request, Response, Application } from 'express';
 import dotenv from 'dotenv';
-import http from 'http';
-import { Server } from "socket.io";
-import { App as MicroWebSockets } from "uWebSockets.js";
+import createLogger from 'logging';
+import * as webserver from "./src/webserver/index";
+import * as websocket from "./src/websocket/index";
 
 dotenv.config();
+const log = createLogger('Main');
 
-const app: Application = express();
-
-const server = http.createServer(app);
-const io = new Server(server, {
-  transports: ["websocket", "polling"],
-  cors: {
-    allowedHeaders: ["Content-Type", "Authorization"],
-    origin: "http://localhost:5173/", // TODO: change to harmonyhub.com
-    credentials: true,
-  }
-});
-
-const uws = MicroWebSockets();
-io.attachApp(uws);
-
-app.get('/', (req: Request, res: Response) => {
-  res.send('Welcome to Express & TypeScript Server');
-});
-
-io.on("connection", (socket) => {
-  console.log("a user connected");
-  
-  // send a message to the client
-  socket.broadcast.emit("hello", "world");
-
-  // receive a message from the client 
-  socket.on("howdy", (arg) => {
-    console.log(arg); // prints "stranger" 
+{
+  const server = webserver.setup();
+  const port = process.env.WEBSERVER_PORT;
+  server.listen(parseInt(port!), () => {
+    log.info(`WebServer is 🔥 at http://localhost:${port}`);
   });
-});
-
-const port = process.env.PORT;
-server.listen(port, () => {
-  console.log(`Server is 🔥 at http://localhost:${port}`);
-});
+}
+{
+  const port = process.env.WEBSOCKET_PORT;
+  const uws = websocket.setup();
+  uws.listen(parseInt(port!), () => {
+    log.info(`WebSocket is 🔥 at http://localhost:${port}`);
+  });
+}
