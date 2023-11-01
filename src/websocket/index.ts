@@ -29,7 +29,7 @@ export function initEvents() {
     io.on("connection", (socket) => {
         socket.on('hh:create-session', (_, cb) => {
             let room = createSession();
-            log.info("[create]", room);
+            log.info("[create]", socket.id, room);
             sessions.get(room)!.push(socket);
             sockets.set(socket, room);
             socket.join(room);
@@ -37,7 +37,7 @@ export function initEvents() {
         });
     
         socket.on('hh:join-session', (props, cb) => {
-            log.info("[join]", props);
+            log.info("[join]", socket.id, props);
             let session = sessions.get(props.room);
             if (!session) return cb({ success: false });
             session.push(socket);
@@ -60,6 +60,7 @@ export function initEvents() {
         })
 
         socket.on('disconnect', () => {
+            log.info("[disconnect]", socket.id);
             let room = sockets.get(socket);
             if (!room) return;
             let collaborators = sessions.get(room);
