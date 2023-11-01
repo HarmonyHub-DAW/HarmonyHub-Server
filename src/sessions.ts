@@ -1,7 +1,10 @@
 import { TypedSocket as Socket } from "./websocket/packets";
+import createLogger from 'logging';
 
 export const sessions = new Map<string, Array<Socket>>();
 export const sockets = new Map<Socket, string>();
+
+const log = createLogger('Session');
 
 export function createToken() : string {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -13,6 +16,7 @@ export function createToken() : string {
 }
 
 export function createSession(): string {
+    log.info("Creating session");
     let token = createToken();
     let iterations = 0;
     while (sessions.has(token)) {
@@ -32,6 +36,7 @@ export function tryRemoveSession(room: string): boolean {
     return false;
 }
 
-export function removeSession(token: string): boolean {
-    return sessions.delete(token);
+export function removeSession(room: string): boolean {
+    log.info("Removing session", room);
+    return sessions.delete(room);
 }

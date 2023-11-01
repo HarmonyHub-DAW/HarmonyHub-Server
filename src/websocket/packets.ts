@@ -1,9 +1,7 @@
 import { Socket } from "socket.io";
 
 export interface ServerToClientEvents {
-    'hh:user-joined': (args: { name: string }) => void;
-    'hh:broadcast': (args: { data: ArrayBuffer }) => void;
-    'hh:request': (args: { data: ArrayBuffer }, callback: (res: { data: any }) => void) => void;
+    'hh:data': (args: { data: ArrayBuffer }, callback: (res: { data: any }) => void) => void;
 }
 
 export interface ClientToServerEvents {
