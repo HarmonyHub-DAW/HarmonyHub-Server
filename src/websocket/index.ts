@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { App as MicroWebSockets, TemplatedApp } from "uWebSockets.js";
 import { ClientToServerEvents, ServerToClientEvents } from "./packets";
 import createLogger from 'logging';
+import { createToken } from "../sessions";
 
 dotenv.config();
 
@@ -21,15 +22,6 @@ export function setup(): TemplatedApp {
     io.attachApp(uws);
     initEvents();
     return uws;
-}
-
-export function createToken() : string {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let string = '';
-    for (let i = 0; i < 64; i++) {
-        string += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return string;
 }
 
 export function initEvents() {
