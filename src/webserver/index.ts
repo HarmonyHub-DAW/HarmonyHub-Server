@@ -4,7 +4,6 @@ import http from 'http';
 import cors from 'cors';
 import createLogger from 'logging';
 import { Server } from 'http';
-import { createSession } from '../sessions';
 
 dotenv.config();
 
@@ -25,10 +24,5 @@ export function setup(): Server {
 export function initEndpoints() {
     app.get('/', (req: Request, res: Response) => {
         res.send('Welcome to Express & TypeScript Server');
-    });
-
-    app.get('/new', (req: Request, res: Response) => {
-        const token = createSession();
-        res.send(token);
     });
 }

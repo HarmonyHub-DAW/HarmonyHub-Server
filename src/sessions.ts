@@ -1,4 +1,7 @@
-export const sessions = new Set<string>();
+import { TypedSocket as Socket } from "./websocket/packets";
+
+export const sessions = new Map<string, Array<Socket>>();
+export const sockets = new Map<Socket, string>();
 
 export function createToken() : string {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -18,8 +21,15 @@ export function createSession(): string {
             console.warn("Failed to create session token after 100 iterations");
         }
     }
-    sessions.add(token);
+    sessions.set(token, []);
     return token;
+}
+
+export function tryRemoveSession(room: string): boolean {
+    if (sessions.get(room)?.length === 0) {
+        return removeSession(room);
+    }
+    return false;
 }
 
 export function removeSession(token: string): boolean {
