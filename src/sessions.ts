@@ -1,8 +1,8 @@
 import { TypedSocket as Socket } from "./websocket/packets";
 import createLogger from 'logging';
 
-export const sessions = new Map<string, Array<Socket>>();
-export const sockets = new Map<Socket, string>();
+export const sessions = new Map<string, Array<[Socket, string]>>(); // [socket, id]
+export const sockets = new Map<Socket, [string, string]>();         // [room, id]
 
 const log = createLogger('Session');
 
@@ -13,6 +13,19 @@ export function createToken() : string {
         string += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     return string;
+}
+
+export function createId(room: string) : string {
+    const session = sessions.get(room)!;
+    let token = createToken();
+    let iterations = 0;
+    while (session.some(([_, id]) => id === token)) {
+        token = createToken();
+        if (iterations++ > 100) {
+            console.warn("Failed to create session token after 100 iterations");
+        }
+    }
+    return token;
 }
 
 export function createSession(): string {

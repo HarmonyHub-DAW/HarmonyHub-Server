@@ -2,7 +2,7 @@ import { Server } from "socket.io";
 import dotenv from "dotenv";
 import { App as MicroWebSockets, TemplatedApp } from "uWebSockets.js";
 import createLogger from 'logging';
-import { createSession, sessions, sockets, tryRemoveSession } from "../sessions";
+import { createId, createSession, sessions, sockets, tryRemoveSession } from "../sessions";
 import { ClientToServerEvents, ServerToClientEvents } from "./packets";
 
 dotenv.config();
@@ -28,43 +28,52 @@ export function setup(): TemplatedApp {
 export function initEvents() {
     io.on("connection", (socket) => {
         socket.on('hh:create-session', (_, cb) => {
-            let room = createSession();
-            log.info("[create]", socket.id, room);
-            sessions.get(room)!.push(socket);
-            sockets.set(socket, room);
+            const room = createSession();
+            const id = createId(room);
+            log.info("[create]", id, room);
+            sessions.get(room)!.push([socket, id]);
+            sockets.set(socket, [room, id]);
             socket.join(room);
             cb({ room: room })
         });
     
         socket.on('hh:join-session', (props, cb) => {
-            log.info("[join]", socket.id, props);
-            let session = sessions.get(props.room);
+            const session = sessions.get(props.room);
             if (!session) return cb({ success: false });
-            session.push(socket);
-            sockets.set(socket, props.room);
+            const id = createId(props.room);
+            log.info("[join]", id, props);
+            session.push([socket, id]);
+            sockets.set(socket, [props.room, id]);
             socket.join(props.room);
             cb({ success: true })
         });
 
         socket.on('hh:broadcast', (props) => {
-            socket.broadcast.emit('hh:data', props, () => void 0);
+            const session = sockets.get(socket);
+            if (!session) return;
+            const [room, id] = session;
+            socket.broadcast.to(room).emit('hh:data', { id: id, ...props}, () => void 0);
         })
 
         socket.on('hh:request', (props, cb) => {
-            let room = sockets.get(socket)!;
+            const session = sockets.get(socket);
+            if (!session) return;
+            const [room, id] = session;
             let collaborators = sessions.get(room)!;
-            let host = collaborators[0];
+            let host = collaborators[0][0];
             if (!host) return cb({ data: null });
-            host.emit('hh:data', props, cb);
+            host.emit('hh:data', { id: id, ...props}, cb);
         })
 
         socket.on('disconnect', () => {
-            log.info("[disconnect]", socket.id);
-            let room = sockets.get(socket);
-            if (!room) return;
-            let collaborators = sessions.get(room);
+            const session = sockets.get(socket);
+            if (!session) return;
+            const [room, id] = session;
+            log.info("[disconnect]", id);
+            socket.broadcast.to(room).emit('hh:user-disconnected', { id: id });
+            const collaborators = sessions.get(room);
             if (!collaborators) return;
-            let index = collaborators.indexOf(socket);
+            const index = collaborators.findIndex(([_, _id]) => _id === id);
             if (index === -1) return;
             collaborators.splice(index, 1);
             tryRemoveSession(room);

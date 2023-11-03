@@ -1,7 +1,8 @@
 import { Socket } from "socket.io";
 
 export interface ServerToClientEvents {
-    'hh:data': (args: { data: ArrayBuffer }, callback: (res: { data: any }) => void) => void;
+    'hh:data': (args: { id: string, data: ArrayBuffer }, callback: (res: { data: any }) => void) => void;
+    'hh:user-disconnected': (args: { id: string }) => void;
 }
 
 export interface ClientToServerEvents {
