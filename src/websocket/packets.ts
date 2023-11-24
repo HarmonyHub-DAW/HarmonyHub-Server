@@ -10,6 +10,7 @@ export interface ClientToServerEvents {
     'hh:join-session': (args: { room: string }, callback: (ack: { success: boolean }) => void) => void;
     'hh:broadcast': (args: { data: ArrayBuffer }) => void;
     'hh:request': (args: { data: ArrayBuffer }, callback: (res: { data: any }) => void) => void;
+    'hh:survey': (args: { data: ArrayBuffer }, callback: (res: { data: any }) => void) => void;
 }
 
 export type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;

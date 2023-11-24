@@ -9,7 +9,7 @@ const log = createLogger('Main');
 {
   const server = webserver.setup();
   const port = process.env.WEBSERVER_PORT;
-  server.listen(parseInt(port!), () => {
+  server.listen(parseInt(port!), "0.0.0.0", () => {
     log.info(`WebServer is 🔥 at http://localhost:${port}`);
   });
 }

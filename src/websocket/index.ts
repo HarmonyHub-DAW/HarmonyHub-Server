@@ -65,6 +65,16 @@ export function initEvents() {
             host.emit('hh:data', { id: id, ...props}, cb);
         })
 
+        socket.on('hh:survey', (props, cb) => {
+            const session = sockets.get(socket);
+            if (!session) return;
+            const [room, id] = session;
+            socket.broadcast.to(room).timeout(1000).emit('hh:data', { id: id, ...props }, (err, responses) => {
+                err && log.error(err);
+                cb({ data: err ? null : responses.map(res => res.data) })
+            });
+        })
+
         socket.on('disconnect', () => {
             const session = sockets.get(socket);
             if (!session) return;
