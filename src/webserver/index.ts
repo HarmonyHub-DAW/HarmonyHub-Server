@@ -1,11 +1,8 @@
 import express, { Request, Response, Application } from 'express';
-import dotenv from "dotenv";
 import http from 'http';
 import cors from 'cors';
 import createLogger from 'logging';
 import { Server } from 'http';
-
-dotenv.config();
 
 const log = createLogger('WebServer');
 const app: Application = express();

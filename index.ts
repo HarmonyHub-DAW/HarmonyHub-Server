@@ -3,7 +3,7 @@ import createLogger from 'logging';
 import * as webserver from "./src/webserver/index";
 import * as websocket from "./src/websocket/index";
 
-dotenv.config();
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 const log = createLogger('Main');
 
 {

@@ -1,11 +1,8 @@
 import { Server } from "socket.io";
-import dotenv from "dotenv";
 import { App as MicroWebSockets, TemplatedApp } from "uWebSockets.js";
 import createLogger from 'logging';
 import { createId, createSession, sessions, sockets, tryRemoveSession } from "../sessions";
 import { ClientToServerEvents, ServerToClientEvents } from "./packets";
-
-dotenv.config();
 
 const log = createLogger('WebSocket');
 

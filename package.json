@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Server sided code for HarmonyHub DAW",
   "scripts": {
-    "build": "tsc-silent -p ./tsconfig.json --suppress && cp .env dist/.env && cp pm2.json dist/pm2.json",
-    "start": "node dist/index.js",
-    "dev": "nodemon index.ts",
+    "build": "tsc-silent -p ./tsconfig.json --suppress && cp .env.production dist/.env.production && cp pm2.json dist/pm2.json",
+    "start": "export NODE_ENV=development && node dist/index.js",
+    "dev": "export NODE_ENV=development && nodemon index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

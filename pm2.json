@@ -5,7 +5,7 @@
             "name": "harmserv",
             "script": "./index.js",
             "env": {
-                "NODE_ENV": "development"
+                "NODE_ENV": "production"
             },
             "log_file": "logs/harmserv.log"
         }
