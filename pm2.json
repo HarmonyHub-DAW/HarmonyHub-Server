@@ -1,0 +1,13 @@
+{
+    "$schema": "https://raw.githubusercontent.com/edosssa/pm2-config/master/pm2config.json",
+    "apps": [
+        {
+            "name": "harmserv",
+            "script": "./index.js",
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "log_file": "logs/harmserv.log"
+        }
+    ]
+}

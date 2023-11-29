@@ -83,3 +83,4 @@ bun.lockb
 yarn.lock
 node_modules/
 .env
+dist/
