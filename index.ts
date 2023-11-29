@@ -6,6 +6,9 @@ import * as websocket from "./src/websocket/index";
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 const log = createLogger('Main');
 
+log.info(`Starting in ${process.env.NODE_ENV} mode`);
+log.info(`Client origin: ${process.env.CLIENT_ORIGIN}`);
+
 {
   const server = webserver.setup();
   const port = process.env.WEBSERVER_PORT;
