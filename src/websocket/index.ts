@@ -3,14 +3,17 @@ import { App as MicroWebSockets, TemplatedApp } from "uWebSockets.js";
 import createLogger from 'logging';
 import { createId, createSession, sessions, sockets, tryRemoveSession } from "../sessions";
 import { ClientToServerEvents, ServerToClientEvents } from "./packets";
+import config from "../dotenv";
 
 const log = createLogger('WebSocket');
+
+log.warn(`Client origin: ${config.clientOrigin}`);
 
 export const io = new Server<ClientToServerEvents, ServerToClientEvents>({
     transports: ["websocket", "polling"],
     cors: {
         allowedHeaders: ["Content-Type", "Authorization"],
-        origin: process.env.CLIENT_ORIGIN, // TODO: change to harmonyhub.com
+        origin: config.clientOrigin, // TODO: change to harmonyhub.com
     }
 });
 
