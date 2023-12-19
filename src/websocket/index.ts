@@ -4,16 +4,16 @@ import createLogger from 'logging';
 import { createId, createSession, sessions, sockets, tryRemoveSession } from "../sessions";
 import { ClientToServerEvents, ServerToClientEvents } from "./packets";
 import config from "../dotenv";
+import { analytics } from "./analytics";
+import { ArrayElement } from "../array";
 
 const log = createLogger('WebSocket');
-
-log.warn(`Client origin: ${config.clientOrigin}`);
 
 export const io = new Server<ClientToServerEvents, ServerToClientEvents>({
     transports: ["websocket", "polling"],
     cors: {
         allowedHeaders: ["Content-Type", "Authorization"],
-        origin: config.clientOrigin, // TODO: change to harmonyhub.com
+        origin: config.clientOrigin
     }
 });
 
@@ -21,8 +21,13 @@ export function setup(): TemplatedApp {
     log.info("Setting up websocket");
     const uws = MicroWebSockets();
     io.attachApp(uws);
+    io.use(analytics);
     initEvents();
     return uws;
+}
+
+function copyArrayBuffer(data: ArrayBuffer) {
+    return new Uint8Array([... new Uint8Array(data)]).buffer;
 }
 
 export function initEvents() {
@@ -36,7 +41,7 @@ export function initEvents() {
             socket.join(room);
             cb({ room: room })
         });
-    
+
         socket.on('hh:join-session', (props, cb) => {
             const session = sessions.get(props.room);
             if (!session) return cb({ success: false });
@@ -48,11 +53,38 @@ export function initEvents() {
             cb({ success: true })
         });
 
-        socket.on('hh:broadcast', (props) => {
+        // Todo: Bug to reproduce: 
+        //  create three clients and look into the logs.
+        //  Only one promise will have an ArrayBuffer, 
+        //  the others will have "Buffer[]" which is not valid.
+
+        // https://stackoverflow.com/questions/77675587/socket-io-promise-all-unexpected-results
+
+        socket.on('hh:broadcast', async (props, cb) => {
             const session = sockets.get(socket);
             if (!session) return;
-            const [room, id] = session;
-            socket.broadcast.to(room).emit('hh:data', { id: id, ...props}, () => void 0);
+            const [room, that] = session;
+            const collaborators = sessions.get(room)!;
+
+            Promise.all<ArrayElement<NonNullable<Parameters<typeof cb>['0']>>>(collaborators
+                .filter(([, other]) => other !== that)
+                .map(([sock, other]) => sock
+                    .emitWithAck('hh:data', { id: that, ...props })
+                    .then(res => {
+                        log.info("received", res);
+                        return { id: other, data: copyArrayBuffer(res!.data) };
+                    })
+                    .catch(error => {
+                        log.error("Promise rejected for", other, error);
+                        // return a default value or handle the error as needed
+                        return { id: other, error: "An error occurred" };
+                    }))
+            ).then(res => {
+                log.warn("Promise.all:", res)
+                console.log(res);
+                
+                cb(res);
+            });
         })
 
         socket.on('hh:request', (props, cb) => {
@@ -62,16 +94,8 @@ export function initEvents() {
             let collaborators = sessions.get(room)!;
             let host = collaborators[0][0];
             if (!host) return cb({ data: null });
-            host.emit('hh:data', { id: id, ...props}, cb);
-        })
-
-        socket.on('hh:survey', (props, cb) => {
-            const session = sockets.get(socket);
-            if (!session) return;
-            const [room, id] = session;
-            socket.broadcast.to(room).timeout(1000).emit('hh:data', { id: id, ...props }, (err, responses) => {
-                err && log.error(err);
-                cb({ data: err ? null : responses.map(res => res.data) })
+            host.emit('hh:data', { id: id, ...props }, (res) => {
+                if (res) cb({ data: res.data });
             });
         })
 
